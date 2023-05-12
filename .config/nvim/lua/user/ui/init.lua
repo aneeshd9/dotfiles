@@ -1,0 +1,6 @@
+require("user.ui.alpha").setup()
+require("user.ui.whichkey").setup()
+require("user.ui.noice").setup()
+require("user.ui.lualine").setup()
+require("user.ui.bufferline").setup()
+require("user.ui.notify").setup()

@@ -1,0 +1,7 @@
+require("user.editor.trouble").setup()
+require("user.editor.todo").setup()
+require("user.editor.illuminate").setup()
+require("user.editor.gitsigns").setup()
+require("user.editor.telescope").setup()
+require("user.editor.spectre").setup()
+require("user.editor.neotree").setup()
