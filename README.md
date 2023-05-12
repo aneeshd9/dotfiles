@@ -24,7 +24,7 @@ are listed in their setup section.
 - cmus
 - mate-polkit
 
-Sets up the following:
+## Individual setups
 
 ## 1. Bash
 
@@ -38,3 +38,9 @@ Sets up the following:
 - Install [coursier](https://get-coursier.io/docs/cli-installation)
 - Install [sdkman](https://sdkman.io/install)
 - Copy the .bashrc file to home directory.
+
+## 2. Tmux
+
+- Install [tpm](https://github.com/tmux-plugins/tpm)
+- Copy .tmux.conf to home directory.
+- Start tmux and use `Ctrl-a I` to install plugins.
