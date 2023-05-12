@@ -23,6 +23,7 @@ are listed in their setup section.
 - cava
 - cmus
 - mate-polkit
+- arandr
 
 ## Individual setups
 
