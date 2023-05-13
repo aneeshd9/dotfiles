@@ -23,7 +23,7 @@ M.setup = function()
       diagnostics_indicator = function(_, _, diag)
         local icons = require("user.icons").diagnostics
         local ret = (diag.error and icons.Error .. diag.error .. " " or "")
-        .. (diag.warning and icons.Warn .. diar.warning or "")
+        .. (diag.warning and icons.Warn .. diag.warning or "")
         return vim.trim(ret)
       end,
       groups = {

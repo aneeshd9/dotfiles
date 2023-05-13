@@ -79,10 +79,16 @@ return packer.startup(function(use)
   use "echasnovski/mini.comment"
 
   -- lsp
+  use "folke/neoconf.nvim"
+  use "folke/neodev.nvim"
   use "neovim/nvim-lspconfig"
   use "williamboman/mason.nvim"
   use "williamboman/mason-lspconfig.nvim"
   use "jose-elias-alvarez/null-ls.nvim"
+  use "onsails/lspkind.nvim"
+  use "j-hui/fidget.nvim"
+  use "nvimdev/lspsaga.nvim"
+  use "smjonas/inc-rename.nvim"
 
   -- dap
   use "mfussenegger/nvim-dap"
@@ -90,6 +96,8 @@ return packer.startup(function(use)
   use "theHamsta/nvim-dap-virtual-text"
   use "jay-babu/mason-nvim-dap.nvim"
   use "jbyuki/one-small-step-for-vimkind"
+  use "utilyre/barbecue.nvim"
+  use "SmiteshP/nvim-navic"
 
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
