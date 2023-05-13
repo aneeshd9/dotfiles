@@ -24,6 +24,7 @@ are listed in their setup section.
 - cmus
 - mate-polkit
 - arandr
+- autorandr
 
 ## Individual setups
 
