@@ -319,6 +319,11 @@ _G.packer_plugins = {
     path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/vim-illuminate",
     url = "https://github.com/RRethy/vim-illuminate"
   },
+  vimtex = {
+    loaded = true,
+    path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/vimtex",
+    url = "https://github.com/lervag/vimtex"
+  },
   ["which-key.nvim"] = {
     loaded = true,
     path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/which-key.nvim",
