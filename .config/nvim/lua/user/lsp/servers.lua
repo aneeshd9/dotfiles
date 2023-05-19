@@ -3,6 +3,8 @@ local M = {}
 local opts = {
 	servers = {
 		clangd = {},
+		pyright = {},
+		hls = {},
 		lua_ls = {
 			settings = {
 				Lua = {
@@ -15,8 +17,33 @@ local opts = {
 				},
 			},
 		},
+		tsserver = {},
 	},
-	setup = {},
+	setup = {
+		tsserver = function()
+			local status_ok, typescript = pcall(require, "typescript")
+			if not status_ok then
+				return
+			end
+
+			typescript.setup({
+				disable_commands = false,
+				debug = false,
+				go_to_source_definition = {
+					fallback = true,
+				},
+				server = {
+					on_attach = function(client, bufnr)
+						require("user.lsp.format").on_attach(client, bufnr)
+						require("user.lsp.keymaps").on_attach(client, bufnr)
+						if client.server_capabilities["documentSymbolProvider"] then
+							require("nvim-navic").attach(client, bufnr)
+						end
+					end,
+				},
+			})
+		end,
+	},
 	config = {
 		diagnostics = {
 			underline = true,
@@ -27,11 +54,6 @@ local opts = {
 				prefix = "●",
 			},
 			severity_sort = true,
-			-- virtual_text = {
-			-- 	severity = {
-			-- 		min = vim.diagnostic.severity.WARN,
-			-- 	},
-			-- },
 			float = {
 				focusable = true,
 				style = "minimal",
@@ -64,17 +86,6 @@ function M.capabilities()
 end
 
 function M.setup()
-	-- local icons = require("user.icons")
-	-- local signs = {
-	-- 	{ name = "DiagnosticSignError", text = icons.diagnostics.Error },
-	-- 	{ name = "DiagnosticSignWarn", text = icons.diagnostics.Warning },
-	-- 	{ name = "DiagnosticSignHint", text = icons.diagnostics.Hint },
-	-- 	{ name = "DiagnosticSignInfo", text = icons.diagnostics.Info },
-	-- }
-	-- for _, sign in ipairs(signs) do
-	-- 	vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = sign.name })
-	-- end
-
 	for name, icon in pairs(require("user.icons").diagnostics) do
 		name = "DiagnosticSign" .. name
 		vim.fn.sign_define(name, { text = icon, texthl = name, numhl = "" })

@@ -66,6 +66,7 @@ return packer.startup(function(use)
 	use("nvim-telescope/telescope.nvim")
 	use("nvim-pack/nvim-spectre")
 	use("nvim-neo-tree/neo-tree.nvim")
+	use("akinsho/toggleterm.nvim")
 
 	-- coding
 	use("L3MON4D3/LuaSnip")
@@ -89,6 +90,7 @@ return packer.startup(function(use)
 	use("j-hui/fidget.nvim")
 	use("nvimdev/lspsaga.nvim")
 	use("smjonas/inc-rename.nvim")
+	use("jose-elias-alvarez/typescript.nvim")
 
 	-- dap
 	use("mfussenegger/nvim-dap")
