@@ -179,6 +179,11 @@ _G.packer_plugins = {
     path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/mason.nvim",
     url = "https://github.com/williamboman/mason.nvim"
   },
+  ["mini.bufremove"] = {
+    loaded = true,
+    path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/mini.bufremove",
+    url = "https://github.com/echasnovski/mini.bufremove"
+  },
   ["mini.comment"] = {
     loaded = true,
     path = "/home/aneeshd/.local/share/nvim/site/pack/packer/start/mini.comment",

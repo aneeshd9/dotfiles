@@ -67,6 +67,7 @@ return packer.startup(function(use)
 	use("nvim-pack/nvim-spectre")
 	use("nvim-neo-tree/neo-tree.nvim")
 	use("akinsho/toggleterm.nvim")
+	use("echasnovski/mini.bufremove")
 
 	-- coding
 	use("L3MON4D3/LuaSnip")
