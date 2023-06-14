@@ -1,0 +1,382 @@
+#+TITLE: Aneesh's GNU Emacs Config
+#+AUTHOR: Aneesh Dandime
+#+DESCRIPTION: Aneesh Dandime's personal handcrafted and light weight emacs configuration file
+#+STARTUP: show2levels
+#+OPTIONS: toc:2
+
+* TABLE OF CONTENTS :toc:
+- [[#important-programs-to-load-first][Important programs to load first]]
+  - [[#elpaca-package-manager][Elpaca Package Manager]]
+  - [[#add-use-package-support-to-elpaca][Add use-package support to elpaca]]
+  - [[#get-exec-path-from-shell][Get exec path from shell]]
+  - [[#evil-mode][Evil mode]]
+  - [[#general-for-keybindings][General for keybindings]]
+  - [[#which-key-is-a-saviour][Which key is a saviour]]
+- [[#ux-setup][UX setup]]
+  - [[#theme][Theme]]
+  - [[#fonts][Fonts]]
+  - [[#syntax-highlight][Syntax highlight]]
+  - [[#gui-tweaks][GUI tweaks]]
+  - [[#icons][Icons]]
+- [[#editing-configuration][Editing configuration]]
+  - [[#backup-configuration][Backup configuration]]
+  - [[#sudo-edit][Sudo edit]]
+  - [[#lsp][LSP]]
+  - [[#dap][DAP]]
+  - [[#autocompletion][Autocompletion]]
+  - [[#project-management][Project management]]
+- [[#org-mode-setup][Org-mode setup]]
+  - [[#general-org-settings][General org settings]]
+  - [[#table-of-contents][Table of contents]]
+  - [[#enable-org-bullets][Enable org bullets]]
+- [[#misc][Misc]]
+
+* Important programs to load first
+** Elpaca Package Manager
+#+begin_src emacs-lisp
+  (defvar elpaca-installer-version 0.4)
+  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+				:ref nil
+				:files (:defaults (:exclude "extensions"))
+				:build (:not elpaca--activate-package)))
+  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+	 (build (expand-file-name "elpaca/" elpaca-builds-directory))
+	 (order (cdr elpaca-order))
+	 (default-directory repo))
+    (add-to-list 'load-path (if (file-exists-p build) build repo))
+    (unless (file-exists-p repo)
+      (make-directory repo t)
+      (when (< emacs-major-version 28) (require 'subr-x))
+      (condition-case-unless-debug err
+	  (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+		   ((zerop (call-process "git" nil buffer t "clone"
+					 (plist-get order :repo) repo)))
+		   ((zerop (call-process "git" nil buffer t "checkout"
+					 (or (plist-get order :ref) "--"))))
+		   (emacs (concat invocation-directory invocation-name))
+		   ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+					 "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+		   ((require 'elpaca))
+		   ((elpaca-generate-autoloads "elpaca" repo)))
+	      (kill-buffer buffer)
+	    (error "%s" (with-current-buffer buffer (buffer-string))))
+	((error) (warn "%s" err) (delete-directory repo 'recursive))))
+    (unless (require 'elpaca-autoloads nil t)
+      (require 'elpaca)
+      (elpaca-generate-autoloads "elpaca" repo)
+      (load "./elpaca-autoloads")))
+  (add-hook 'after-init-hook #'elpaca-process-queues)
+  (elpaca `(,@elpaca-order))
+#+end_src
+
+** Add use-package support to elpaca
+#+begin_src emacs-lisp
+  (elpaca elpaca-use-package
+    (elpaca-use-package-mode)
+    (setq elpaca-use-package-by-default t))
+
+  (elpaca-wait)
+#+end_src
+
+** Get exec path from shell
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize))
+#+end_src
+
+** Evil mode
+#+begin_src emacs-lisp
+  (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-vsplit-window-right t)
+    (setq evil-split-window-below t)
+    (setq evil-want-C-i-jump nil)
+    :config
+    (evil-mode))
+
+  (use-package evil-collection
+    :after evil
+    :config
+    (setq evil-collection-mode-list '(dashboard dired ibuffer))
+    (evil-collection-init))
+
+  (use-package evil-tutor)
+#+end_src
+
+** General for keybindings
+#+begin_src emacs-lisp
+  (use-package general
+    :config
+    (general-evil-setup)
+
+    (general-create-definer aneeshd/gl-keys
+      :states '(normal insert visual emacs)
+      :keymaps 'override
+      :prefix "SPC"
+      :global-prefix "M-SPC")
+
+    (general-create-definer aneeshd/non-prefix-keys
+      :states '(normal insert visual emacs)
+      :keymaps 'override))
+
+  (elpaca-wait)
+
+  (aneeshd/non-prefix-keys
+    "C-=" '(text-scale-increase :wk "Zoom in")
+    "C--" '(text-scale-decrease :wk "Zoom out"))
+
+  (aneeshd/gl-keys
+    "f" '(:ignore t :wk "files")
+    "ff" '(find-file :wk "Find file")
+    "fr" '((lambda () (interactive) (load-file "~/.emacs.d/init.el")) :wk "Reload emacs config")
+    "fc" '((lambda () (interactive) (find-file "~/.emacs.d/config.org")) :wk "Edit emacs config"))
+
+  (aneeshd/gl-keys
+    "TAB TAB" '(comment-line :wk "Comment lines"))
+
+  (aneeshd/gl-keys
+    "b" '(:ignore t :wk "buffer")
+    "bb" '(switch-to-buffer :wk "Switch buffer")
+    "bi" '(ibuffer :wk "Ibuffer")
+    "bk" '(kill-this-buffer :wk "Kill buffer")
+    "bn" '(next-buffer :wk "Next buffer")
+    "bp" '(previous-buffer :wk "Previous buffer")
+    "br" '(revert-buffer :wk "Reload buffer"))
+
+  (aneeshd/gl-keys
+    "e" '(:ignore t :wk "evaluate")
+    "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
+    "ed" '(eval-defun :wk "Evaluate defun containing or after point")
+    "ee" '(eval-expression :wk "Evaluate elisp expression")
+    "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
+    "er" '(eval-region :wk "Evaluate elisp in region"))
+
+  (aneeshd/gl-keys
+    "h" '(:ignore t :wk "help")
+    "hf" '(describe-function :wk "Describe function")
+    "hv" '(describe-variable :wk "Describe variable"))
+
+  (aneeshd/gl-keys
+    "t" '(:ignore t :wk "toggle")
+    "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
+    "tt" '(visual-line-mode :wk "Toggle truncated lines"))
+#+end_src
+
+** Which key is a saviour
+#+begin_src emacs-lisp
+  (use-package which-key
+    :init
+    (which-key-mode 1)
+    :config
+    (setq which-key-side-window-location 'bottom
+          which-key-sort-order #'which-key-key-order-alpha
+          which-key-sort-uppercase-first nil
+          which-key-add-column-padding 1
+          which-key-max-display-columns nil
+          which-key-min-display-lines 6
+          which-key-side-window-slot -10
+          which-key-side-window-max-height 0.25
+          which-key-idle-delay 0.8
+          which-key-max-description-length 25
+          which-key-separator " -> "))
+#+end_src
+
+* UX setup
+** Theme
+#+begin_src emacs-lisp
+  (use-package doom-themes
+    :config
+    (setq doom-themes-enable-bold t
+          doom-themes-enable-italic t)
+    (load-theme 'doom-dark+ t))
+
+  (elpaca-wait)
+#+end_src
+
+** Fonts
+#+begin_src emacs-lisp
+  (set-face-attribute 'default nil
+                      :font "JetBrains Mono"
+                      :height 110
+                      :weight 'medium)
+
+  (set-face-attribute 'variable-pitch nil
+                      :font "Ubuntu"
+                      :height 120
+                      :weight 'medium)
+
+  (set-face-attribute 'fixed-pitch nil
+                      :font "JetBrains Mono"
+                      :height 110
+                      :weight 'medium)
+
+  ;; Make comments and keywords italic
+  (set-face-attribute 'font-lock-comment-face nil
+                      :slant 'italic)
+  (set-face-attribute 'font-lock-keyword-face nil
+                      :slant 'italic)
+
+  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
+
+  (setq-default line-spacing 0.12)
+#+end_src
+
+** Syntax highlight
+#+begin_src emacs-lisp
+  (use-package tree-sitter)
+  (use-package tree-sitter-langs
+    :after tree-sitter
+    :config
+    (global-tree-sitter-mode)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+#+end_src
+
+** GUI tweaks
+#+begin_src emacs-lisp
+  ;; Don't want menubar, toolbar and scrollbar
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+
+  ;; Want line numbers everywhere
+  (global-display-line-numbers-mode 1)
+  (global-visual-line-mode 1)
+
+  ;; Don't want to see startup screen
+  (setq inhibit-startup-screen t)
+
+  ;; Maximize emacs on startup
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+end_src
+
+** Icons
+#+begin_src emacs-lisp
+  ;; Install all-the-icons library
+  ;; NOTE: Run 'M-x all-the-icons-install-fonts' one time after
+  ;;       this package has setup
+  (use-package all-the-icons
+    :if (display-graphic-p))
+#+end_src
+
+* Editing configuration
+** Backup configuration
+#+begin_src emacs-lisp
+  (setq user-cache-directory (concat "~/.emacs.d/" "cache"))
+  (setq backup-directory-alist `(("." . ,(expand-file-name "backups" user-cache-directory)))
+	url-history-file (expand-file-name "url/history" user-cache-directory)
+	auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-cache-directory)
+	projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" user-cache-directory))
+#+end_src
+
+** Sudo edit
+This package allows me to edit files as root
+#+begin_src emacs-lisp
+  (use-package sudo-edit
+    :config
+    (aneeshd/gl-keys
+      "fu" '(sudo-edit-find-file :wk "Find file as root")
+      "fU" '(sudo-edit :wk "Edit current file as root")))
+#+end_src
+
+** LSP
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :commands lsp
+    :hook (prog-mode . lsp)
+    :config
+    (setq lsp-prefer-flymake nil
+          lsp-completion-provider :capf
+          gc-cons-threshold (* 100 1024 1024)
+          read-process-output-max (* 1024 1024)
+          create-lock-files nil))
+
+  (use-package lsp-ui
+    :hook  (lsp-mode . lsp-ui-mode)
+    :config
+    (setq lsp-ui-doc-enable t
+          lsp-ui-doc-position 'at-point
+          lsp-ui-doc-header t
+          lsp-ui-doc-include-signature t
+          lsp-ui-doc-max-height 30
+          lsp-ui-doc-max-width 80
+          lsp-ui-doc-use-childframe t
+          lsp-ui-doc-use-webkit nil)
+
+    (setq lsp-ui-sideline-enable t
+          lsp-ui-sideline-show-symbol t
+          lsp-ui-sideline-show-hover t
+          lsp-ui-sideline-show-diagnostics t
+          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-ignore-duplicate t)
+
+    (setq lsp-ui-imenu-enable t
+          lsp-ui-imenu-kind-position 'top))
+
+  (use-package lsp-treemacs
+    :after lsp
+    :commands lsp-treemacs-error-list)
+#+end_src
+
+** DAP
+#+begin_src emacs-lisp
+  (use-package dap-mode
+    :after lsp-mode
+    :config
+    (require 'dap-ui)
+    (dap-mode t)
+    (dap-ui-mode t))
+#+end_src
+
+** Autocompletion
+#+begin_src emacs-lisp
+  (use-package company
+    :hook (prog-mode . company-mode)
+    :config
+    (setq company-minimum-prefix-length 1
+          company-idle-delay 0.0))
+
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
+
+** Project management
+#+begin_src emacs-lisp
+  (use-package projectile
+    :init (projectile-mode +1)
+    :config
+    ;; (define-key projectile-mode-map (kbd "SPC p") 'projectile-command-map)
+    )
+#+end_src
+
+* Org-mode setup
+** General org settings
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook 'org-indent-mode)
+  (add-to-list 'org-modules 'org-tempo t)
+#+end_src
+
+** Table of contents
+#+begin_src emacs-lisp
+  (use-package toc-org
+    :commands toc-org-enable
+    :init (add-hook 'org-mode-hook 'toc-org-enable))
+#+end_src
+
+** Enable org bullets
+#+begin_src emacs-lisp
+  (use-package org-bullets
+    :config (add-hook 'org-mode-hook (lambda ()
+				       (org-bullets-mode 1))))
+#+end_src
+
+* Misc
+#+begin_src emacs-lisp
+  (use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
+  ;; (elpaca nil (message "deferred"))
+#+end_src
